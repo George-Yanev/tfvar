@@ -52,7 +52,7 @@ variable definitions files e.g. terraform.tfvars[.json] *.auto.tfvars[.json]`)
 	rootCmd.PersistentFlags().Bool(flagNoDefault, false, "Do not use defined default values")
 	rootCmd.PersistentFlags().StringArray(flagVar, []string{}, `Set a variable in the generated definitions.
 This flag can be set multiple times.`)
-	rootCmd.PersistentFlags().String(flagVarFile, "", `Set variables from a file.`)
+	rootCmd.PersistentFlags().StringArray(flagVarFile, []string{}, `Set variables from a file. This flag can be set multiple time.`)
 
 	return rootCmd, func() {
 		if r.log != nil {
@@ -148,14 +148,16 @@ func (r *runner) rootRunE(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fromFile, err := cmd.PersistentFlags().GetString(flagVarFile)
+	fromFiles, err := cmd.PersistentFlags().GetStringArray(flagVarFile)
 	if err != nil {
 		return errors.Wrap(err, "cmd: get flag --var-file")
 	}
 
-	if fromFile != "" {
-		if err := tfvar.CollectFromFile(fromFile, unparseds); err != nil {
-			return err
+	for _, fromFile := range fromFiles {
+		if fromFile != "" {
+			if err := tfvar.CollectFromFile(fromFile, unparseds); err != nil {
+				return err
+			}
 		}
 	}
 
